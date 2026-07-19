@@ -1,0 +1,14 @@
+---
+- name: Validate worker join inputs
+  ansible.builtin.assert:
+    that:
+      - kubeadm_worker_join_command | length > 0
+    fail_msg: "Supply kubeadm join material through a secret provider before enabling worker joins."
+  when: kubeadm_worker_enabled | bool
+
+- name: Stop until secure worker join implementation is reviewed
+  ansible.builtin.fail:
+    msg: >-
+      kubeadm_worker is scaffolded but does not execute join material yet.
+      Keep kubeadm_worker_enabled false.
+  when: kubeadm_worker_enabled | bool

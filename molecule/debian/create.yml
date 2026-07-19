@@ -1,0 +1,86 @@
+---
+- name: Create the Debian Vagrant test instance
+  hosts: localhost
+  gather_facts: false
+  vars:
+    kiln_scenario_directory: "{{ lookup('ansible.builtin.env', 'MOLECULE_SCENARIO_DIRECTORY') }}"
+    kiln_instance_config_path: "{{ lookup('ansible.builtin.env', 'MOLECULE_INSTANCE_CONFIG') }}"
+    kiln_instance_name: "{{ molecule_yml.platforms[0].name }}"
+  tasks:
+    - name: Validate Molecule lifecycle inputs
+      ansible.builtin.assert:
+        that:
+          - kiln_scenario_directory | length > 0
+          - kiln_instance_config_path | length > 0
+          - kiln_instance_name | length > 0
+
+    - name: Read Vagrant status before create
+      ansible.builtin.command:
+        argv:
+          - vagrant
+          - status
+          - --machine-readable
+      args:
+        chdir: "{{ kiln_scenario_directory }}"
+      register: kiln_vagrant_status_before
+      changed_when: false
+      failed_when: false
+
+    - name: Start the Vagrant instance
+      ansible.builtin.command:
+        argv:
+          - vagrant
+          - up
+          - "{{ kiln_instance_name }}"
+          - --no-provision
+      args:
+        chdir: "{{ kiln_scenario_directory }}"
+      register: kiln_vagrant_up
+      changed_when: "'state,running' not in kiln_vagrant_status_before.stdout"
+
+    - name: Read the live Vagrant SSH configuration
+      ansible.builtin.command:
+        argv:
+          - vagrant
+          - ssh-config
+          - "{{ kiln_instance_name }}"
+      args:
+        chdir: "{{ kiln_scenario_directory }}"
+      register: kiln_vagrant_ssh_config
+      changed_when: false
+
+    - name: Populate Molecule instance configuration
+      ansible.builtin.set_fact:
+        instance_conf_dict:
+          instance: "{{ kiln_instance_name }}"
+          address: >-
+            {{ (kiln_vagrant_ssh_config.stdout
+                | regex_findall('(?m)^\s*HostName\s+(\S+)$')
+                | first) }}
+          user: >-
+            {{ (kiln_vagrant_ssh_config.stdout
+                | regex_findall('(?m)^\s*User\s+(\S+)$')
+                | first) }}
+          port: >-
+            {{ (kiln_vagrant_ssh_config.stdout
+                | regex_findall('(?m)^\s*Port\s+(\S+)$')
+                | first) }}
+          identity_file: >-
+            {{ (kiln_vagrant_ssh_config.stdout
+                | regex_findall('(?m)^\s*IdentityFile\s+"?([^"\n]+)"?$')
+                | first) }}
+          shell_type: sh
+
+    - name: Validate parsed Vagrant SSH configuration
+      ansible.builtin.assert:
+        that:
+          - instance_conf_dict.address | length > 0
+          - instance_conf_dict.user | length > 0
+          - instance_conf_dict.port | length > 0
+          - instance_conf_dict.identity_file | length > 0
+
+    - name: Write Molecule instance configuration
+      ansible.builtin.copy:
+        dest: "{{ kiln_instance_config_path }}"
+        mode: "0600"
+        content: "{{ [instance_conf_dict] | to_nice_yaml(indent=2) }}"

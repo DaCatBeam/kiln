@@ -1,0 +1,9 @@
+---
+- name: Prepare Kubernetes nodes
+  ansible.builtin.import_playbook: prepare_nodes.yml
+
+- name: Install Kubernetes components
+  ansible.builtin.import_playbook: install_kubernetes.yml
+
+- name: Bootstrap the Kubernetes cluster
+  ansible.builtin.import_playbook: bootstrap_cluster.yml

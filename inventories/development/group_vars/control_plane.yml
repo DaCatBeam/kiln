@@ -1,0 +1,2 @@
+---
+kiln_kubernetes_control_plane_endpoint: 192.168.56.10:6443

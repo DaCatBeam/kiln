@@ -1,0 +1,4 @@
+---
+container_runtime_enabled: false
+container_runtime_package: containerd
+container_runtime_service: containerd

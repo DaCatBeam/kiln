@@ -1,0 +1,13 @@
+---
+kiln_environment: development
+
+ansible_user: ansible
+ansible_become: true
+
+node_hardening_enabled: false
+kubernetes_kernel_enabled: false
+container_runtime_enabled: false
+kubernetes_packages_enabled: false
+kubeadm_control_plane_enabled: false
+kubeadm_worker_enabled: false
+kubernetes_node_upgrade_enabled: false

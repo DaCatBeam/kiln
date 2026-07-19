@@ -1,0 +1,28 @@
+---
+- name: Persist Kubernetes kernel modules
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/kiln-kubernetes.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: "{{ kubernetes_kernel_modules | join('\n') }}\n"
+  when: kubernetes_kernel_enabled | bool
+
+- name: Load Kubernetes kernel modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ kubernetes_kernel_modules }}"
+  when: kubernetes_kernel_enabled | bool
+
+- name: Apply Kubernetes networking kernel settings
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    sysctl_set: true
+    reload: true
+  loop: "{{ kubernetes_kernel_sysctl | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when: kubernetes_kernel_enabled | bool

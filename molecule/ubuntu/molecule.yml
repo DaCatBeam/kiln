@@ -1,0 +1,63 @@
+---
+dependency:
+  name: galaxy
+  options:
+    role-file: requirements.yml
+    requirements-file: requirements.yml
+
+# Molecule calls its built-in delegated driver "default". The scenario's
+# create and destroy playbooks implement the Vagrant lifecycle.
+driver:
+  name: default
+
+platforms:
+  - name: kiln-ubuntu
+    groups:
+      - kiln_test
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ROLES_PATH: "${MOLECULE_PROJECT_DIRECTORY}/roles"
+  config_options:
+    defaults:
+      host_key_checking: false
+      interpreter_python: auto_silent
+    ssh_connection:
+      pipelining: true
+  connection_options:
+    ansible_ssh_common_args: -o IdentitiesOnly=yes
+  inventory:
+    group_vars:
+      all:
+        kiln_molecule_scenario: ubuntu
+        kiln_expected_os_family: Debian
+  playbooks:
+    create: create.yml
+    converge: converge.yml
+    destroy: destroy.yml
+
+verifier:
+  name: ansible
+
+shared_state: false
+
+scenario:
+  create_sequence:
+    - dependency
+    - create
+  converge_sequence:
+    - dependency
+    - create
+    - converge
+  destroy_sequence:
+    - destroy
+  test_sequence:
+    - dependency
+    - destroy
+    - syntax
+    - create
+    - converge
+    - idempotence
+    - verify
+    - destroy

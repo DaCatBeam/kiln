@@ -1,0 +1,16 @@
+---
+- name: Upgrade Kubernetes control plane nodes one at a time
+  hosts: control_plane
+  become: true
+  gather_facts: true
+  serial: 1
+  roles:
+    - role: kubernetes_node_upgrade
+
+- name: Upgrade Kubernetes workers one at a time
+  hosts: workers
+  become: true
+  gather_facts: true
+  serial: 1
+  roles:
+    - role: kubernetes_node_upgrade

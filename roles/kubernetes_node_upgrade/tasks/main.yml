@@ -1,0 +1,14 @@
+---
+- name: Validate Kubernetes upgrade target
+  ansible.builtin.assert:
+    that:
+      - kubernetes_node_upgrade_target | length > 0
+    fail_msg: "Set kubernetes_node_upgrade_target before enabling upgrades."
+  when: kubernetes_node_upgrade_enabled | bool
+
+- name: Stop until the drain and rollback workflow is reviewed
+  ansible.builtin.fail:
+    msg: >-
+      kubernetes_node_upgrade is scaffolded but does not yet drain, upgrade, or
+      uncordon nodes. Keep kubernetes_node_upgrade_enabled false.
+  when: kubernetes_node_upgrade_enabled | bool

@@ -1,0 +1,10 @@
+---
+galaxy_info:
+  author: Kiln contributors
+  description: Apply a small, explicit foundation for future hardening profiles.
+  license: MIT
+  min_ansible_version: "2.18"
+  platforms:
+    - name: Debian
+    - name: Ubuntu
+dependencies: []

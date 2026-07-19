@@ -1,0 +1,5 @@
+---
+kiln_cluster_name: development
+kiln_kubernetes_version: "1.34"
+kiln_kubernetes_pod_subnet: 10.244.0.0/16
+kiln_kubernetes_service_subnet: 10.96.0.0/12

@@ -1,0 +1,29 @@
+---
+- name: Verify the Ubuntu VM and lifecycle probe
+  hosts: kiln_test
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Detect the VM hypervisor
+      ansible.builtin.command:
+        argv:
+          - systemd-detect-virt
+          - --vm
+      register: kiln_virtualization
+      changed_when: false
+
+    - name: Read the lifecycle probe
+      ansible.builtin.slurp:
+        src: /etc/kiln/molecule-lifecycle
+      register: kiln_lifecycle_probe
+
+    - name: Assert Ubuntu VM lifecycle state
+      ansible.builtin.assert:
+        that:
+          - ansible_facts["os_family"] == kiln_expected_os_family
+          - ansible_facts["virtualization_role"] == "guest"
+          - kiln_virtualization.stdout | length > 0
+          - "'managed_by=kiln' in (kiln_lifecycle_probe.content | b64decode)"
+          - "'scenario=ubuntu' in (kiln_lifecycle_probe.content | b64decode)"
+          - "'platform=kiln-ubuntu' in (kiln_lifecycle_probe.content | b64decode)"
+          - "'os_family=Ubuntu' in (kiln_lifecycle_probe.content | b64decode)"

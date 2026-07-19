@@ -1,0 +1,7 @@
+---
+node_hardening_enabled: false
+node_hardening_sysctl:
+  fs.protected_hardlinks: 1
+  fs.protected_symlinks: 1
+  kernel.dmesg_restrict: 1
+  kernel.kptr_restrict: 2

@@ -1,0 +1,19 @@
+---
+- name: Validate node hardening prerequisites
+  ansible.builtin.assert:
+    that:
+      - ansible_system == "Linux"
+    fail_msg: "The node_hardening role supports Linux targets only."
+  when: node_hardening_enabled | bool
+
+- name: Apply foundational kernel hardening settings
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    sysctl_set: true
+    reload: true
+  loop: "{{ node_hardening_sysctl | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when: node_hardening_enabled | bool

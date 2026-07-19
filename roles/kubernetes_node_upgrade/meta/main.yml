@@ -1,0 +1,10 @@
+---
+galaxy_info:
+  author: Kiln contributors
+  description: Scaffold a serial, guarded Kubernetes node upgrade boundary.
+  license: MIT
+  min_ansible_version: "2.18"
+  platforms:
+    - name: Debian
+    - name: Ubuntu
+dependencies: []

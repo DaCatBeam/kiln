@@ -1,0 +1,38 @@
+---
+- name: Destroy the Debian Vagrant test instance
+  hosts: localhost
+  gather_facts: false
+  vars:
+    kiln_scenario_directory: "{{ lookup('ansible.builtin.env', 'MOLECULE_SCENARIO_DIRECTORY') }}"
+    kiln_instance_config_path: "{{ lookup('ansible.builtin.env', 'MOLECULE_INSTANCE_CONFIG') }}"
+  tasks:
+    - name: Read Vagrant status before destroy
+      ansible.builtin.command:
+        argv:
+          - vagrant
+          - status
+          - --machine-readable
+      args:
+        chdir: "{{ kiln_scenario_directory }}"
+      register: kiln_vagrant_status_before
+      changed_when: false
+      failed_when: false
+
+    - name: Destroy the Vagrant instance
+      ansible.builtin.command:
+        argv:
+          - vagrant
+          - destroy
+          - --force
+      args:
+        chdir: "{{ kiln_scenario_directory }}"
+      changed_when:
+        - kiln_vagrant_status_before.rc == 0
+        - "'state,not_created' not in kiln_vagrant_status_before.stdout"
+
+    - name: Reset Molecule instance configuration
+      ansible.builtin.copy:
+        dest: "{{ kiln_instance_config_path }}"
+        mode: "0600"
+        content: "{{ {} | to_nice_yaml }}"
+      when: kiln_instance_config_path | length > 0

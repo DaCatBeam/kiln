@@ -1,0 +1,6 @@
+---
+kubernetes_packages_enabled: false
+kubernetes_packages_list:
+  - kubelet
+  - kubeadm
+  - kubectl
