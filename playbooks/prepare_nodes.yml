@@ -1,0 +1,9 @@
+---
+- name: Prepare Linux nodes for Kubernetes
+  hosts: kubernetes
+  become: true
+  gather_facts: true
+  roles:
+    - role: node_baseline
+    - role: node_hardening
+    - role: kubernetes_kernel

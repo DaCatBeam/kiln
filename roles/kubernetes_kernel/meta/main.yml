@@ -1,0 +1,10 @@
+---
+galaxy_info:
+  author: Kiln contributors
+  description: Load and persist kernel requirements for Kubernetes networking.
+  license: MIT
+  min_ansible_version: "2.18"
+  platforms:
+    - name: Debian
+    - name: Ubuntu
+dependencies: []

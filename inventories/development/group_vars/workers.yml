@@ -1,0 +1,3 @@
+---
+# Store the short-lived kubeadm join material in a vault or secret manager.
+kubeadm_worker_join_command: ""

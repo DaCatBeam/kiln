@@ -1,0 +1,3 @@
+---
+kubeadm_control_plane_enabled: false
+kubeadm_control_plane_config_path: /etc/kubernetes/kubeadm-kiln.yml

@@ -1,0 +1,25 @@
+# frozen_string_literal: true
+
+VM_NAME = "kiln-debian"
+VM_BOX = ENV.fetch("KILN_DEBIAN_BOX", "bento/debian-12")
+VM_BOX_VERSION = ENV.fetch("KILN_DEBIAN_BOX_VERSION", "")
+VM_MEMORY = ENV.fetch("KILN_VM_MEMORY", "2048").to_i
+VM_CPUS = ENV.fetch("KILN_VM_CPUS", "2").to_i
+
+Vagrant.configure("2") do |config|
+  config.vm.box_check_update = ENV.fetch("KILN_BOX_CHECK_UPDATE", "false") == "true"
+  config.vm.boot_timeout = 600
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.define VM_NAME do |machine|
+    machine.vm.box = VM_BOX
+    machine.vm.box_version = VM_BOX_VERSION unless VM_BOX_VERSION.empty?
+    machine.vm.hostname = VM_NAME
+
+    machine.vm.provider "virtualbox" do |provider|
+      provider.name = VM_NAME
+      provider.memory = VM_MEMORY
+      provider.cpus = VM_CPUS
+    end
+  end
+end

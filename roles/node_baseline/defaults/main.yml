@@ -1,0 +1,8 @@
+---
+node_baseline_enabled: true
+node_baseline_directory: /etc/kiln
+
+# The probe is test-only. Molecule enables it explicitly in converge.yml.
+node_baseline_lifecycle_probe_enabled: false
+node_baseline_lifecycle_probe_scenario: ""
+node_baseline_lifecycle_probe_path: "{{ node_baseline_directory }}/molecule-lifecycle"

@@ -1,0 +1,10 @@
+---
+- name: Converge the Ubuntu lifecycle probe
+  hosts: kiln_test
+  become: true
+  gather_facts: true
+  roles:
+    - role: node_baseline
+      vars:
+        node_baseline_lifecycle_probe_enabled: true
+        node_baseline_lifecycle_probe_scenario: "{{ kiln_molecule_scenario }}"

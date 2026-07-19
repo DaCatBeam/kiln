@@ -1,0 +1,13 @@
+---
+- name: Install the container runtime
+  ansible.builtin.package:
+    name: "{{ container_runtime_package }}"
+    state: present
+  when: container_runtime_enabled | bool
+
+- name: Enable and start the container runtime
+  ansible.builtin.service:
+    name: "{{ container_runtime_service }}"
+    enabled: true
+    state: started
+  when: container_runtime_enabled | bool

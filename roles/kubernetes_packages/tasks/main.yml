@@ -1,0 +1,20 @@
+---
+- name: Require an explicit Kubernetes version
+  ansible.builtin.assert:
+    that:
+      - kiln_kubernetes_version is defined
+      - kiln_kubernetes_version | string | length > 0
+    fail_msg: "Set kiln_kubernetes_version before enabling kubernetes_packages."
+  when: kubernetes_packages_enabled | bool
+
+- name: Install Kubernetes packages from configured repositories
+  ansible.builtin.package:
+    name: "{{ kubernetes_packages_list }}"
+    state: present
+  when: kubernetes_packages_enabled | bool
+
+- name: Enable kubelet
+  ansible.builtin.service:
+    name: kubelet
+    enabled: true
+  when: kubernetes_packages_enabled | bool

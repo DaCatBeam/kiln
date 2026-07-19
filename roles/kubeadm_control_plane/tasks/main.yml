@@ -1,0 +1,17 @@
+---
+- name: Validate control plane bootstrap inputs
+  ansible.builtin.assert:
+    that:
+      - kiln_kubernetes_control_plane_endpoint is defined
+      - kiln_kubernetes_control_plane_endpoint | string | length > 0
+      - kiln_kubernetes_pod_subnet is defined
+      - kiln_kubernetes_service_subnet is defined
+    fail_msg: "Define the control plane endpoint and cluster networks before bootstrap."
+  when: kubeadm_control_plane_enabled | bool
+
+- name: Stop until kubeadm bootstrap implementation is reviewed
+  ansible.builtin.fail:
+    msg: >-
+      kubeadm_control_plane is scaffolded but does not yet generate a reviewed
+      kubeadm configuration. Keep kubeadm_control_plane_enabled false.
+  when: kubeadm_control_plane_enabled | bool

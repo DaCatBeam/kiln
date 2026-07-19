@@ -1,0 +1,46 @@
+---
+- name: Validate node baseline prerequisites
+  ansible.builtin.assert:
+    that:
+      - ansible_facts["system"] == "Linux"
+    fail_msg: "The node_baseline role supports Linux targets only."
+  when: node_baseline_enabled | bool
+
+- name: Create Kiln state directory
+  ansible.builtin.file:
+    path: "{{ node_baseline_directory }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: node_baseline_enabled | bool
+
+- name: Record the managed node baseline
+  ansible.builtin.copy:
+    dest: "{{ node_baseline_directory }}/baseline.yml"
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      ---
+      managed_by: kiln
+      inventory_hostname: {{ inventory_hostname | to_json }}
+      distribution: {{ ansible_facts["distribution"] | to_json }}
+      distribution_version: {{ ansible_facts["distribution_version"] | to_json }}
+      architecture: {{ ansible_facts["architecture"] | to_json }}
+  when: node_baseline_enabled | bool
+
+- name: Write Molecule lifecycle probe
+  ansible.builtin.copy:
+    dest: "{{ node_baseline_lifecycle_probe_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      managed_by=kiln
+      scenario={{ node_baseline_lifecycle_probe_scenario }}
+      platform={{ inventory_hostname }}
+      os_family={{ ansible_facts["os_family"] }}
+  when:
+    - node_baseline_enabled | bool
+    - node_baseline_lifecycle_probe_enabled | bool
