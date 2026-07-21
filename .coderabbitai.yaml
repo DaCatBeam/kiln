@@ -2,22 +2,132 @@
 ---
 language: "en-US"
 reviews:
-  profile: "chill"
+  profile: "assertive"
   request_changes_workflow: false
   high_level_summary: true
-  poem: true
+  poem: false
   review_status: true
   review_details: false
   auto_review:
     enabled: true
     drafts: false
+    finishing_touches:
+      fix_ci: false
+      resolve_merge_conflict: false
+      autofix: false
+    post_merge_actions:
+      enabled: false
 chat:
   art: false
   allow_non_org_members: false
   auto_reply: true
 knowledge_base:
-  opt_out: true
+  opt_out: false
   learnings:
     scope: local
   pull_requests:
     scope: local
+code_generation:
+  unit_tests:
+    path_instructions:
+      # Gen guardrails
+      - path: "**/*"
+        instructions: |
+          Generate tests only for changed Ansible role implementation files.
+
+          Eligible implementation paths include:
+          - roles/*/tasks/**
+          - roles/*/handlers/**
+          - roles/*/defaults/**
+          - roles/*/vars/**
+          - roles/*/templates/**
+          - roles/*/files/**
+          - roles/*/meta/**
+
+          Do not generate tests for unrelated application code,
+          documentation, CI configuration, inventories, generated files,
+          vendored collections, or dependency lock files.
+
+          Treat Molecule verification as the testing framework for Ansible
+          roles. Never create generic tests outside the affected role's
+          Molecule scenario.
+
+          Only add or modify test files. Do not change role implementation
+          files to make the tests pass.
+
+      # Main rules for choosing the Molecule scenario and verifier.
+      - path: "roles/**"
+        instructions: |
+          Determine the affected role from the changed path:
+          roles/<role-name>/...
+
+          Before writing tests, inspect every existing scenario under:
+          molecule/<scenario-name>/
+
+          Select the applicable scenario using this order:
+
+          1. The scenario's converge.yml applies or includes the affected role.
+          2. The scenario platform matches the operating-system family affected
+             by the change.
+          3. Existing verification files already test related behavior.
+          4. Use the default scenario only when it actually converges the role
+             and no more-specific scenario applies.
+
+          Assume that molecule/default is a placeholder.
+
+          If multiple existing scenarios exercise the changed behavior on
+          different supported platforms, add equivalent verification to each
+          applicable scenario.
+
+          Do not create a new Molecule scenario unless the repository has no
+          applicable scenario and the pull request explicitly asks for one.
+          If no applicable scenario exists, report that test generation cannot
+          be completed safely rather than placing tests in an arbitrary
+          scenario.
+
+          Preserve the scenario's existing verification strategy:
+
+          - If molecule/<scenario>/verify.yml contains Ansible assertions,
+            add assertions there.
+          - If another verifier is explicitly configured in molecule.yml,
+            follow that verifier and its existing conventions.
+          - Do not introduce pytest-testinfra when the scenario currently uses
+            verify.yml, or vice versa.
+
+          Tests must validate externally observable state, such as:
+
+          - packages installed or absent
+          - services enabled, disabled, running, or stopped
+          - files, directories, ownership, permissions, and content
+          - rendered configuration values
+          - users and groups
+          - sysctl values
+          - firewall state
+          - command behavior and exit status
+          - service configurations (ex: aide, fapolicy)
+          - kernel modules
+
+          Avoid tests that merely duplicate the task YAML or assert that a task
+          name exists unless called out in a review.
+
+          Write tests that 
+
+          Reuse existing fixtures, variables, helpers, and naming conventions.
+
+          After writing the tests, run the narrowest applicable command:
+
+              molecule test -s <scenario-name>
+
+          Do not run an unrelated scenario. Do not silently move a test to
+          another scenario merely because the selected scenario fails.
+      # Existing Molecule test changes.
+      - path: "molecule/**"
+        instructions: |
+          Keep changes inside the scenario being modified.
+
+          Do not copy scenario-specific assertions into another scenario
+          without confirming that its platform and converge configuration
+          exercise the same behavior.
+
+          Add behavioral assertions rather than implementation-detail checks.
+          Preserve the existing verifier and test style.
