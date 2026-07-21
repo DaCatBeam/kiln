@@ -1,0 +1,8 @@
+---
+- name: Import Debian Package Manager Hardening
+  ansible.builtin.import_tasks: debian.yml
+  when:
+    - ansible_facts["os_family"] == "Debian"
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline

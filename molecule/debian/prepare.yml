@@ -1,0 +1,111 @@
+---
+- name: Prepare APT source fixture state
+  hosts: all
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Ensure this scenario runs on a Debian-family system
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.os_family == "Debian"
+        fail_msg: >-
+          The apt_source_permissions scenario requires a Debian-family
+          operating system.
+
+  tasks:
+    - name: Create Intentionally Insecure APT source-list Directory
+      ansible.builtin.file:
+        path: /etc/apt/sources.list.d
+        state: directory
+        owner: nobody
+        group: nogroup
+        mode: "0777"
+
+    - name: Create Intentionally Insecure APT Config Directory
+      ansible.builtin.file:
+        path: /etc/apt/apt.conf.d
+        state: directory
+        owner: nobody
+        group: nogroup
+        mode: "0777"
+
+    - name: Create Intentionally Trusted GPG Key Directory
+      ansible.builtin.file:
+        path: /etc/apt/trusted.gpg.d
+        state: directory
+        owner: nobody
+        group: nogroup
+        mode: "0777"
+
+    - name: Create Intentionally Insecure Shared Keyrings Directory
+      ansible.builtin.file:
+        path: /usr/share/keyrings
+        state: directory
+        owner: nobody
+        group: nogroup
+        mode: "0777"
+
+    - name: Create Intentionally Insecure APT Auth Config Directory
+      ansible.builtin.file:
+        path: /etc/apt/auth.conf.d
+        state: directory
+        owner: nobody
+        group: nogroup
+        mode: "0777"
+
+    - name: Install Insecure APT Auth Conf File
+      ansible.builtin.copy:
+        src: fixtures/apt/auth.conf
+        dest: /etc/apt/auth.conf.d/auth.conf
+        owner: nobody
+        group: nogroup
+        mode: "0666"
+
+    - name: Install insecure legacy source-list fixture
+      ansible.builtin.copy:
+        src: fixtures/apt/insecure.list
+        dest: /etc/apt/sources.list.d/insecure.list
+        owner: nobody
+        group: nogroup
+        mode: "0666"
+
+    - name: Install Permissions Restricted Source
+      ansible.builtin.copy:
+        src: fixtures/apt/restrictive.sources
+        dest: /etc/apt/sources.list.d/restrictive.sources
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Install Restricted GPG Key In Shared Keyrings Directory
+      ansible.builtin.copy:
+        src: fixtures/gpg/vendor-alpha.gpg
+        dest: /usr/share/keyrings/vendor-alpha.gpg
+        owner: nobody
+        group: root
+        mode: "0600"
+
+    - name: Install GPG Key In Trusted GPG Key Directory
+      ansible.builtin.copy:
+        src: fixtures/gpg/vendor-beta.gpg
+        dest: /etc/apt/trusted.gpg.d/vendor-beta.gpg
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Install Insecure GPG Key In Non-Standard Location
+      ansible.builtin.copy:
+        src: fixtures/gpg/vendor-charlie.gpg
+        dest: /etc/apt/trusted.gpg.d/vendor-charlie.gpg
+        owner: root
+        group: nogroup
+        mode: "0777"
+
+    - name: Install GPG Key In Non-Standard Location
+      ansible.builtin.copy:
+        src: fixtures/gpg/vendor-delta.gpg
+        dest: /etc/apt/keyrings/vendor-delta.gpg
+        owner: root
+        group: nogroup
+        mode: "0645"

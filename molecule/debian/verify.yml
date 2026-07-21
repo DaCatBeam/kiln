@@ -27,3 +27,170 @@
           - "'scenario=debian' in (kiln_lifecycle_probe.content | b64decode)"
           - "'platform=kiln-debian' in (kiln_lifecycle_probe.content | b64decode)"
           - "'os_family=Debian' in (kiln_lifecycle_probe.content | b64decode)"
+
+    - name: Collect APT Auth Config Directory
+      ansible.builtin.stat:
+        path: /etc/apt/auth.conf.d
+      register: kiln_apt_auth_conf_directory
+
+    - name: Assert APT Auth Config Directory Is root:root With 0755 Permissions
+      ansible.builtin.assert:
+        that:
+          - kiln_apt_auth_conf_directory.stat.exists
+          - kiln_apt_auth_conf_directory.stat.uid == 0
+          - kiln_apt_auth_conf_directory.stat.gid == 0
+          - kiln_apt_auth_conf_directory.stat.mode == "0755"
+
+    - name: Collect Trusted GPG Key Directory
+      ansible.builtin.stat:
+        path: /etc/apt/trusted.gpg.d
+      register: kiln_trusted_gpg_key_directory
+
+    - name: Assert Trusted GPG Key Directory Is root:root With 0755 Permissions
+      ansible.builtin.assert:
+        that:
+          - kiln_trusted_gpg_key_directory.stat.exists
+          - kiln_trusted_gpg_key_directory.stat.uid == 0
+          - kiln_trusted_gpg_key_directory.stat.gid == 0
+          - kiln_trusted_gpg_key_directory.stat.mode == "0755"
+
+    - name: Collect Shared Keyrings Directory
+      ansible.builtin.stat:
+        path: /usr/share/keyrings
+      register: kiln_shared_keyrings_directory
+
+    - name: Assert Shared Keyrings Directory Is root:root With 0755 Permissions
+      ansible.builtin.assert:
+        that:
+          - kiln_shared_keyrings_directory.stat.exists
+          - kiln_shared_keyrings_directory.stat.uid == 0
+          - kiln_shared_keyrings_directory.stat.gid == 0
+          - kiln_shared_keyrings_directory.stat.mode == "0755"
+
+    - name: Collect APT Sources List Directory Stats
+      ansible.builtin.stat:
+        path: /etc/apt/sources.list.d
+      register: kiln_apt_sources_list_directory
+
+    - name: Assert APT Sources List Directory Is root:root With 0755 Permissions
+      ansible.builtin.assert:
+        that:
+          - kiln_apt_sources_list_directory.stat.exists
+          - kiln_apt_sources_list_directory.stat.uid == 0
+          - kiln_apt_sources_list_directory.stat.gid == 0
+          - kiln_apt_sources_list_directory.stat.mode == "0755"
+
+    - name: Collect APT Source List File insecure.list
+      ansible.builtin.stat:
+        path: /etc/apt/sources.list.d/insecure.list
+      register: kiln_apt_sources_list_insecure_list_file
+
+    - name: Assert APT Source List File insecure.list Is root:root With 0644 Permissions
+      ansible.builtin.assert:
+        that:
+          - kiln_apt_sources_list_insecure_list_file.stat.exists
+          - kiln_apt_sources_list_insecure_list_file.stat.uid == 0
+          - kiln_apt_sources_list_insecure_list_file.stat.gid == 0
+          - kiln_apt_sources_list_insecure_list_file.stat.mode == "0644"
+
+    - name: Collect APT Source List File restrictive.sources
+      ansible.builtin.stat:
+        path: /etc/apt/sources.list.d/restrictive.sources
+      register: kiln_apt_sources_list_restrictive_sources_file
+
+    - name: Assert APT Source List File restrictive.sources Is root:root With 0600 Permissions
+      ansible.builtin.assert:
+        that:
+          - kiln_apt_sources_list_restrictive_sources_file.stat.exists
+          - kiln_apt_sources_list_restrictive_sources_file.stat.uid == 0
+          - kiln_apt_sources_list_restrictive_sources_file.stat.gid == 0
+          - kiln_apt_sources_list_restrictive_sources_file.stat.mode == "0600"
+
+    - name: Collect Shared Keyrings GPG Key vendor-alpha.gpg
+      ansible.builtin.stat:
+        path: /usr/share/keyrings/vendor-alpha.gpg
+      register: kiln_shared_keyrings_vendor_alpha_gpg_key_file
+
+    - name: Assert Shared Keyrings GPG Key vendor-alpha.gpg Is root:root With 0600 Permissions
+      ansible.builtin.assert:
+        that:
+          - kiln_shared_keyrings_vendor_alpha_gpg_key_file.stat.exists
+          - kiln_shared_keyrings_vendor_alpha_gpg_key_file.stat.uid == 0
+          - kiln_shared_keyrings_vendor_alpha_gpg_key_file.stat.gid == 0
+          - kiln_shared_keyrings_vendor_alpha_gpg_key_file.stat.mode == "0600"
+
+    - name: Collect Trusted GPG Key vendor-beta.gpg
+      ansible.builtin.stat:
+        path: /etc/apt/trusted.gpg.d/vendor-beta.gpg
+      register: kiln_shared_keyrings_vendor_beta_gpg_key_file
+
+    - name: Assert Trusted GPG Key vendor-beta.gpg Is root:root With 0644 Permissions
+      ansible.builtin.assert:
+        that:
+          - kiln_shared_keyrings_vendor_beta_gpg_key_file.stat.exists
+          - kiln_shared_keyrings_vendor_beta_gpg_key_file.stat.uid == 0
+          - kiln_shared_keyrings_vendor_beta_gpg_key_file.stat.gid == 0
+          - kiln_shared_keyrings_vendor_beta_gpg_key_file.stat.mode == "0644"
+
+    - name: Collect Trusted GPG Key vendor-charlie.gpg
+      ansible.builtin.stat:
+        path: /etc/apt/trusted.gpg.d/vendor-charlie.gpg
+      register: kiln_shared_keyrings_vendor_charlie_gpg_key_file
+
+    - name: Assert Trusted GPG Key vendor-charlie.gpg Is root:root With 0644 Permissions
+      ansible.builtin.assert:
+        that:
+          - kiln_shared_keyrings_vendor_charlie_gpg_key_file.stat.exists
+          - kiln_shared_keyrings_vendor_charlie_gpg_key_file.stat.uid == 0
+          - kiln_shared_keyrings_vendor_charlie_gpg_key_file.stat.gid == 0
+          - kiln_shared_keyrings_vendor_charlie_gpg_key_file.stat.mode == "0644"
+
+    - name: Collect GPG Key Ref'd In APT Sources/List In Non-Standard Location
+      ansible.builtin.stat:
+        path: /etc/apt/keyrings/vendor-delta.gpg
+      register: kiln_shared_keyrings_vendor_delta_gpg_key_file
+
+    - name: Assert GPG Key Ref'd In APT Sources/List In Non-Standard Location Is root:root With 0644 Permissions
+      ansible.builtin.assert:
+        that:
+          - kiln_shared_keyrings_vendor_delta_gpg_key_file.stat.exists
+          - kiln_shared_keyrings_vendor_delta_gpg_key_file.stat.uid == 0
+          - kiln_shared_keyrings_vendor_delta_gpg_key_file.stat.gid == 0
+          - kiln_shared_keyrings_vendor_delta_gpg_key_file.stat.mode == "0644"
+
+    - name: Collect APT Auth Conf File
+      ansible.builtin.stat:
+        path: /etc/apt/auth.conf.d/auth.conf
+      register: kiln_apt_auth_conf_file
+
+    - name: Assert GPG Key Ref'd In APT Sources/List In Non-Standard Location Is root:root With 0644 Permissions
+      ansible.builtin.assert:
+        that:
+          - kiln_apt_auth_conf_file.stat.exists
+          - kiln_apt_auth_conf_file.stat.uid == 0
+          - kiln_apt_auth_conf_file.stat.gid == 0
+          - kiln_apt_auth_conf_file.stat.mode == "0640"
+
+    - name: Collect APT Weak Dependencies Disabled File
+      ansible.builtin.stat:
+        path: /etc/apt/apt.conf.d/99-kiln-disable-weak-deps
+      register: kiln_apt_disable_weak_deps_file
+
+    - name: Assert APT Weak Dependencies Disabled File Is root:root With 0644 Permissions
+      ansible.builtin.assert:
+        that:
+          - kiln_apt_disable_weak_deps_file.stat.exists
+          - kiln_apt_disable_weak_deps_file.stat.uid == 0
+          - kiln_apt_disable_weak_deps_file.stat.gid == 0
+          - kiln_apt_disable_weak_deps_file.stat.mode == "0644"
+
+    - name: Read the lifecycle probe
+      ansible.builtin.slurp:
+        src: /etc/apt/apt.conf.d/99-kiln-disable-weak-deps
+      register: kiln_apt_disable_weak_deps_file_content
+
+    - name: Assert APT Weak Dependencies Disabled File Disables Suggests and Recommends
+      ansible.builtin.assert:
+        that:
+          - "'APT::Install-Recommends \"0\";' in (kiln_apt_disable_weak_deps_file_content.content | b64decode)"
+          - "'APT::Install-Suggests \"0\";' in (kiln_apt_disable_weak_deps_file_content.content | b64decode)"

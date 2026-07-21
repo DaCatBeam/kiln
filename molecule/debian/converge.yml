@@ -8,3 +8,7 @@
       vars:
         node_baseline_lifecycle_probe_enabled: true
         node_baseline_lifecycle_probe_scenario: "{{ kiln_molecule_scenario }}"
+    - role: node_hardening
+      vars:
+        node_hardening_enabled: true
+        node_hardening_package_manager_role_enabled: true

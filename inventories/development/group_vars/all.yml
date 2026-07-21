@@ -5,6 +5,7 @@ ansible_user: ansible
 ansible_become: true
 
 node_hardening_enabled: false
+node_hardening_package_manager_role_enabled: false
 kubernetes_kernel_enabled: false
 container_runtime_enabled: false
 kubernetes_packages_enabled: false
