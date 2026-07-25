@@ -277,6 +277,9 @@
   loop_control:
     label: "{{ item }}"
   register: package_manager_apt_signed_by_key_file_stats
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
 
 - name: Report Missing Signed-By Key Files
   ansible.builtin.debug:
