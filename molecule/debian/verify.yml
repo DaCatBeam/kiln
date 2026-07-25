@@ -37,6 +37,7 @@
       ansible.builtin.assert:
         that:
           - kiln_apt_auth_conf_directory.stat.exists
+          - kiln_apt_auth_conf_directory.stat.isdir
           - kiln_apt_auth_conf_directory.stat.uid == 0
           - kiln_apt_auth_conf_directory.stat.gid == 0
           - kiln_apt_auth_conf_directory.stat.mode == "0755"
@@ -50,6 +51,7 @@
       ansible.builtin.assert:
         that:
           - kiln_trusted_gpg_key_directory.stat.exists
+          - kiln_trusted_gpg_key_directory.stat.isdir
           - kiln_trusted_gpg_key_directory.stat.uid == 0
           - kiln_trusted_gpg_key_directory.stat.gid == 0
           - kiln_trusted_gpg_key_directory.stat.mode == "0755"
@@ -63,6 +65,7 @@
       ansible.builtin.assert:
         that:
           - kiln_shared_keyrings_directory.stat.exists
+          - kiln_shared_keyrings_directory.stat.isdir
           - kiln_shared_keyrings_directory.stat.uid == 0
           - kiln_shared_keyrings_directory.stat.gid == 0
           - kiln_shared_keyrings_directory.stat.mode == "0755"
@@ -76,6 +79,7 @@
       ansible.builtin.assert:
         that:
           - kiln_apt_sources_list_directory.stat.exists
+          - kiln_apt_sources_list_directory.stat.isdir
           - kiln_apt_sources_list_directory.stat.uid == 0
           - kiln_apt_sources_list_directory.stat.gid == 0
           - kiln_apt_sources_list_directory.stat.mode == "0755"
@@ -89,6 +93,7 @@
       ansible.builtin.assert:
         that:
           - kiln_apt_sources_list_insecure_list_file.stat.exists
+          - kiln_apt_sources_list_insecure_list_file.stat.isreg
           - kiln_apt_sources_list_insecure_list_file.stat.uid == 0
           - kiln_apt_sources_list_insecure_list_file.stat.gid == 0
           - kiln_apt_sources_list_insecure_list_file.stat.mode == "0644"
@@ -102,6 +107,7 @@
       ansible.builtin.assert:
         that:
           - kiln_apt_sources_list_restrictive_sources_file.stat.exists
+          - kiln_apt_sources_list_restrictive_sources_file.stat.isreg
           - kiln_apt_sources_list_restrictive_sources_file.stat.uid == 0
           - kiln_apt_sources_list_restrictive_sources_file.stat.gid == 0
           - kiln_apt_sources_list_restrictive_sources_file.stat.mode == "0600"
@@ -115,6 +121,7 @@
       ansible.builtin.assert:
         that:
           - kiln_shared_keyrings_vendor_alpha_gpg_key_file.stat.exists
+          - kiln_shared_keyrings_vendor_alpha_gpg_key_file.stat.isreg
           - kiln_shared_keyrings_vendor_alpha_gpg_key_file.stat.uid == 0
           - kiln_shared_keyrings_vendor_alpha_gpg_key_file.stat.gid == 0
           - kiln_shared_keyrings_vendor_alpha_gpg_key_file.stat.mode == "0600"
@@ -128,6 +135,7 @@
       ansible.builtin.assert:
         that:
           - kiln_shared_keyrings_vendor_beta_gpg_key_file.stat.exists
+          - kiln_shared_keyrings_vendor_beta_gpg_key_file.stat.isreg
           - kiln_shared_keyrings_vendor_beta_gpg_key_file.stat.uid == 0
           - kiln_shared_keyrings_vendor_beta_gpg_key_file.stat.gid == 0
           - kiln_shared_keyrings_vendor_beta_gpg_key_file.stat.mode == "0644"
@@ -141,6 +149,7 @@
       ansible.builtin.assert:
         that:
           - kiln_shared_keyrings_vendor_charlie_gpg_key_file.stat.exists
+          - kiln_shared_keyrings_vendor_charlie_gpg_key_file.stat.isreg
           - kiln_shared_keyrings_vendor_charlie_gpg_key_file.stat.uid == 0
           - kiln_shared_keyrings_vendor_charlie_gpg_key_file.stat.gid == 0
           - kiln_shared_keyrings_vendor_charlie_gpg_key_file.stat.mode == "0644"
@@ -154,6 +163,7 @@
       ansible.builtin.assert:
         that:
           - kiln_shared_keyrings_vendor_delta_gpg_key_file.stat.exists
+          - kiln_shared_keyrings_vendor_delta_gpg_key_file.stat.isreg
           - kiln_shared_keyrings_vendor_delta_gpg_key_file.stat.uid == 0
           - kiln_shared_keyrings_vendor_delta_gpg_key_file.stat.gid == 0
           - kiln_shared_keyrings_vendor_delta_gpg_key_file.stat.mode == "0644"
@@ -163,13 +173,28 @@
         path: /etc/apt/auth.conf.d/auth.conf
       register: kiln_apt_auth_conf_file
 
-    - name: Assert GPG Key Ref'd In APT Sources/List In Non-Standard Location Is root:root With 0644 Permissions
+    - name: Assert APT Auth Conf File Is root:root With 0640 Permissions
       ansible.builtin.assert:
         that:
           - kiln_apt_auth_conf_file.stat.exists
+          - kiln_apt_auth_conf_file.stat.isreg
           - kiln_apt_auth_conf_file.stat.uid == 0
           - kiln_apt_auth_conf_file.stat.gid == 0
           - kiln_apt_auth_conf_file.stat.mode == "0640"
+
+    - name: Collect APT Conf Directory
+      ansible.builtin.stat:
+        path: /etc/apt/apt.conf.d
+      register: kiln_apt_conf_directory
+
+    - name: Assert APT Conf Directory Is root:root With 0755 Permissions
+      ansible.builtin.assert:
+        that:
+          - kiln_apt_conf_directory.stat.exists
+          - kiln_apt_conf_directory.stat.isdir
+          - kiln_apt_conf_directory.stat.uid == 0
+          - kiln_apt_conf_directory.stat.gid == 0
+          - kiln_apt_conf_directory.stat.mode == "0755"
 
     - name: Collect APT Weak Dependencies Disabled File
       ansible.builtin.stat:
@@ -180,6 +205,7 @@
       ansible.builtin.assert:
         that:
           - kiln_apt_disable_weak_deps_file.stat.exists
+          - kiln_apt_disable_weak_deps_file.stat.isreg
           - kiln_apt_disable_weak_deps_file.stat.uid == 0
           - kiln_apt_disable_weak_deps_file.stat.gid == 0
           - kiln_apt_disable_weak_deps_file.stat.mode == "0644"

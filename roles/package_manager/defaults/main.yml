@@ -1,4 +1,5 @@
 ---
+package_manager_apt_conf_directory_path: /etc/apt/apt.conf.d
 package_manager_apt_conf_disable_weak_deps_file_name: 99-kiln-disable-weak-deps
 package_manager_apt_source_list_directory_path: /etc/apt/sources.list.d
 package_manager_apt_auth_conf_directory_path: /etc/apt/auth.conf.d
