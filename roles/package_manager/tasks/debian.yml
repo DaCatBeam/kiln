@@ -30,13 +30,31 @@
     - cis_level_1_baseline
     - cis_level_2_baseline
 
+- name: Discover APT Conf File Disabling Weak Dependencies
+  ansible.builtin.stat:
+    path: "{{ package_manager_apt_conf_directory_path }}/{{ package_manager_apt_conf_disable_weak_deps_file_name }}"
+  register: package_manager_apt_conf_disable_weak_deps_file
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
 - name: Disable APT Installation of Weak Dependencies
   ansible.builtin.copy:
     src: files/99-kiln-disable-weak-deps
     dest: "{{ package_manager_apt_conf_directory_path }}/{{ package_manager_apt_conf_disable_weak_deps_file_name }}"
     owner: root
     group: root
-    mode: "0644"
+    mode: >-
+      {{
+        package_manager_apt_conf_disable_weak_deps_file.stat.mode
+        if (
+          package_manager_apt_conf_disable_weak_deps_file.stat.mode is defined
+          and
+          package_manager_apt_conf_disable_weak_deps_file.stat.mode
+            is ansible.builtin.match("^0[0-6][014][014]$")
+        )
+        else "0644"
+      }}
   tags:
     - cis_level_2_baseline
 
