@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-PHONY: run-all-tests run-debian-tests run-ubuntu-tests run-linter \
+.PHONY: run-all-tests run-debian-tests run-ubuntu-tests run-linter \
 	   create-test-fixtures create-gpg-test-fixtures
 
 run-linter:
