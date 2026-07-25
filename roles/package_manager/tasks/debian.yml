@@ -51,7 +51,7 @@
           package_manager_apt_conf_disable_weak_deps_file.stat.mode is defined
           and
           package_manager_apt_conf_disable_weak_deps_file.stat.mode
-            is ansible.builtin.match("^0[0-6][014][014]$")
+            is ansible.builtin.match("^0[0246][04][04]$")
         )
         else "0644"
       }}
@@ -115,7 +115,7 @@
         if (
           item.mode is defined
           and
-          item.mode is ansible.builtin.match("^0[0-6][014][014]$")
+          item.mode is ansible.builtin.match("^0[0246][04][04]$")
         )
         else "0644"
       }}
@@ -307,7 +307,7 @@
           item.stat.mode is defined
           and
           item.stat.mode
-            is ansible.builtin.match("^0[0-6][014][014]$")
+            is ansible.builtin.match("^0[0246][04][04]$")
         )
         else "0644"
       }}
@@ -349,7 +349,7 @@
         if (
           item.mode is defined
           and
-          item.mode is ansible.builtin.match("^0[0-6][014][014]$")
+          item.mode is ansible.builtin.match("^0[0246][04][04]$")
         )
         else "0644"
       }}
@@ -413,7 +413,7 @@
         if (
           item.mode is defined
           and
-          item.mode is ansible.builtin.match("^0[0-6][014][0]$")
+          item.mode is ansible.builtin.match("^0[0246][04][0]$")
         )
         else "0640"
       }}
