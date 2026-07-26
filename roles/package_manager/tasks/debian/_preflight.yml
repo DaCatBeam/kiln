@@ -1,0 +1,35 @@
+---
+- name: Validate Legitimate APT Signing Key Directories Have Been Provided
+  ansible.builtin.assert:
+    that:
+      - package_manager_apt_signing_key_directories is defined
+      - package_manager_apt_signing_key_directories | list | length > 0
+      - >-
+        package_manager_apt_signing_key_directories | length
+        ==
+        package_manager_apt_signing_key_directories | unique | length
+    fail_msg: |
+      Legitimate APT signing key directories must be supplied for the run.
+      Legitimate APT signing key directories must be unique.
+
+- name: Validate Action Vars Are Configured Correctly
+  ansible.builtin.assert:
+    that:
+      - package_manager_apt_discovered_signing_key_outside_directories_action in ["fail", "inform"]
+      - package_manager_apt_discovered_keyring_symlink_action in ["fail", "inform"]
+    fail_msg: |
+      Action variables must be populated with allowed choices...
+      package_manager_apt_discovered_signing_key_outside_directories_action: ["fail", "inform"]
+      package_manager_apt_discovered_keyring_symlink_action: ["fail", "inform"]
+
+- name: Validate Legitimate APT Signing Key Directories Are Absolute Paths and Non-Root
+  ansible.builtin.assert:
+    that:
+      - item | string | length > 0
+      - item is ansible.builtin.abs
+      - item | list | unique | length > 1
+      - item[-1] == "/"
+    fail_msg: All legitimate APT signing key directories must end in "/"
+  loop: "{{ package_manager_apt_signing_key_directories }}"
+  loop_control:
+    label: "{{ item }}"

@@ -1,0 +1,68 @@
+---
+- name: Discover APT Source List Directory
+  ansible.builtin.stat:
+    path: "{{ package_manager_apt_source_list_directory_path }}"
+  register: package_manager_apt_source_list_directory
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: |
+    Ensure Root File Ownership For APT Source List Directory.
+    Ensure Apt Source List Directory is 0755 or More Restrictive.
+  ansible.builtin.file:
+    path: "{{ package_manager_apt_source_list_directory_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: >-
+      {{
+        package_manager_apt_source_list_directory.stat.mode
+        if (
+          package_manager_apt_source_list_directory.stat.mode is defined
+          and
+          package_manager_apt_source_list_directory.stat.mode
+            is ansible.builtin.match("^0[0-7][0145][0145]$")
+        )
+        else "0755"
+      }}
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: Discover APT Source List Files
+  ansible.builtin.find:
+    paths: "{{ package_manager_apt_source_list_directory_path }}"
+    patterns:
+      - "*.list"
+      - "*.sources"
+    recurse: true
+    file_type: file
+  register: package_manager_apt_source_list_files
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: |
+    Ensure Root File Ownership For APT Source List Files.
+    Ensure APT Source List Files Are 0644 or More Restrictive.
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    owner: root
+    group: root
+    mode: >-
+      {{
+        item.mode
+        if (
+          item.mode is defined
+          and
+          item.mode is ansible.builtin.match("^0[0246][04][04]$")
+        )
+        else "0644"
+      }}
+  loop: "{{ package_manager_apt_source_list_files.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline

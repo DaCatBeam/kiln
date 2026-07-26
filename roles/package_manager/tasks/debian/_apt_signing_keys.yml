@@ -1,0 +1,289 @@
+---
+- name: Discover APT Signing Keys In Legitimate APT Signing Key Directories
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ package_manager_apt_signing_key_directories }}"
+  register: package_manager_signing_key_directories
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: |
+    Ensure Root File Ownership For Legitimate APT Signing Key Directories.
+    Ensure Legitimate APT Signing Key Directories is 0755 or More Restrictive.
+  ansible.builtin.file:
+    path: "{{ item.stat.path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: >-
+      {{
+        item.stat.mode
+        if (
+          item.stat.mode is defined
+          and
+          item.stat.mode is ansible.builtin.match("^0[0-7][0145][0145]$")
+        )
+        else "0755"
+      }}
+  loop: "{{ package_manager_signing_key_directories.results }}"
+  loop_control:
+    label: "{{ item.stat.path }}"
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: Discover APT Source List Directory
+  ansible.builtin.stat:
+    path: "{{ package_manager_apt_source_list_directory_path }}"
+  register: package_manager_apt_source_list_directory
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: Read APT Source And List File Contents
+  ansible.builtin.slurp:
+    src: "{{ item.path }}"
+  loop: "{{ package_manager_apt_source_list_files.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  register: package_manager_apt_source_configuration_contents
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: Initialize Discovered Signed-By Key Paths
+  ansible.builtin.set_fact:
+    package_manager_apt_signed_by_key_paths: []
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: Collect signed-by/Signed-By Key Paths
+  vars:
+    package_manager_apt_source_content: "{{ item.content | ansible.builtin.b64decode }}"
+
+    # Matches modern 1 line list entries
+    #
+    # ex: deb [signed-by=/etc/apt/keyrings/vendor.gpg,/etc/apt/keyrings/vendor2.gpg]
+    # yamllint disable rule:line-length
+    package_manager_apt_list_signed_by_values: >-
+      {{
+        package_manager_apt_source_content
+        | ansible.builtin.regex_findall(
+            '(?im)^[ \t]*(?!#)deb(?:-src)?[ \t]+\[[^\]\n]*\bsigned-by[ \t]*=[ \t]*([^\]\s]+(?:[ \t]*,[ \t]*[^\]\s]+)*)[^\]\n]*\]'
+          )
+      }}
+    # yamllint enable rule:line-length
+
+    # Matches sources field
+    #
+    # ex1: Signed-By: /etc/apt/keyrings/vendor.gpg
+    # ex2: Signed-By:
+    #       /etc/apt/keyrings/vendor.gpg
+    #       /etc/apt/keyrings/vendor2.gpg
+    package_manager_apt_sources_signed_by_values: >-
+      {{
+        package_manager_apt_source_content
+        | ansible.builtin.regex_findall(
+            "(?ims)^[ \t]*Signed-By[ \t]*:[ \t]*(.*?)(?=^[^ \t#\r\n][^:\r\n]*:|^[ \t]*$|\Z)"
+          )
+      }}
+
+    # Reject files with embedded public keys
+    package_manager_apt_file_backed_signed_by_values: >-
+      {{
+        (package_manager_apt_list_signed_by_values + package_manager_apt_sources_signed_by_values)
+        | reject("search", "-----BEGIN PGP PUBLIC KEY BLOCK-----")
+        | list
+      }}
+
+    package_manager_apt_signed_by_paths_from_file: >-
+      {{
+        package_manager_apt_file_backed_signed_by_values
+        | map("ansible.builtin.regex_findall", "/[^,\s\]]+")
+        | ansible.builtin.flatten
+        | list
+      }}
+
+  ansible.builtin.set_fact:
+    package_manager_apt_signed_by_key_paths: >-
+      {{ package_manager_apt_signed_by_key_paths + package_manager_apt_signed_by_paths_from_file }}
+  loop: "{{ package_manager_apt_source_configuration_contents.results }}"
+  loop_control:
+    label: "{{ item.source }}"
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: Deduplicate Discovered Signed-By Key Paths
+  ansible.builtin.set_fact:
+    package_manager_apt_signed_by_key_paths: "{{ package_manager_apt_signed_by_key_paths | unique | sort | list }}"
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: Inspect Signed-By Key Files For Symlinks
+  ansible.builtin.stat:
+    path: "{{ item }}"
+    follow: false
+  loop: "{{ package_manager_apt_signed_by_key_paths }}"
+  loop_control:
+    label: "{{ item }}"
+  register: package_manager_apt_signed_by_key_file_stats_unresolved
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: Fail When Keyrings Referenced Are Not Symlinks
+  ansible.builtin.fail:
+    msg: |
+      Discovered APT Signing Key {{ item }} that is a symlink.
+      Failing Run...
+  loop: "{{ package_manager_apt_signed_by_key_file_stats_unresolved.results }}"
+  loop_control:
+    label: "{{ item }}"
+  when:
+    - item.stat.islnk
+    - package_manager_apt_discovered_keyring_symlink_action == fail
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: Inform When Keyrings Referenced Are Symlinks
+  ansible.builtin.debug:
+    msg: |
+      Discovered APT Signing Key {{ item }} that is a symlink.
+      Resolving link target and proceeding with run.
+  loop: "{{ package_manager_apt_signed_by_key_file_stats_unresolved.results }}"
+  loop_control:
+    label: "{{ item }}"
+  when:
+    - item.stat.islnk
+    - package_manager_apt_discovered_keyring_symlink_action == inform
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: Inspect Signed-By Key File Targets
+  ansible.builtin.stat:
+    path: "{{ item }}"
+    follow: true
+  loop: "{{ package_manager_apt_signed_by_key_paths }}"
+  loop_control:
+    label: "{{ item }}"
+  register: package_manager_apt_signed_by_key_file_stats
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: Fail When Keyrings Are Not In Correct File Location
+  ansible.builtin.fail:
+    msg: |
+      Discovered APT Signing Key {{ item }} outside of specified directories.
+      Configure Directories: {{ package_manager_apt_signing_key_directories }}
+      Failing Run...
+  loop: "{{ package_manager_apt_signed_by_key_file_stats.results }}"
+  loop_control:
+    label: "{{ item }}"
+  when:
+    - item.stat.path | dirname not in package_manager_apt_signing_key_directories | map('dirname') | list
+    - package_manager_apt_discovered_signing_key_outside_directories_action == fail
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: Inform When Keyrings Are Not In Correct File Location
+  ansible.builtin.debug:
+    msg: |
+      Discovered APT Signing Key {{ item }} outside of specified directories.
+      Configure Directories: {{ package_manager_apt_signing_key_directories }}
+      Proceeding with remediation...
+  loop: "{{ package_manager_apt_signed_by_key_file_stats.results }}"
+  loop_control:
+    label: "{{ item }}"
+  when:
+    - item.stat.path | dirname not in package_manager_apt_signing_key_directories | map('dirname') | list
+    - package_manager_apt_discovered_signing_key_outside_directories_action == inform
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: Report Missing Signed-By Key Files
+  ansible.builtin.debug:
+    msg: >-
+      APT source configuration references a missing Signed-By key:
+      {{ item.item }}
+  loop: "{{ package_manager_apt_signed_by_key_file_stats.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when:
+    - not item.stat.exists
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: |
+    Ensure Root File Ownership For APT Sources List Files That Include Signed-By.
+    Ensure APT Sources List Files That Include Signed-By Are 0644 Or More Restrictive.
+  ansible.builtin.file:
+    path: "{{ item.item }}"
+    state: file
+    owner: root
+    group: root
+    mode: >-
+      {{
+        item.stat.mode
+        if (
+          item.stat.mode is defined
+          and
+          item.stat.mode
+            is ansible.builtin.match("^0[0246][04][04]$")
+        )
+        else "0644"
+      }}
+  loop: "{{ package_manager_apt_signed_by_key_file_stats.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when:
+    - item.stat.exists
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: Discover APT Trusted GPG Keys
+  ansible.builtin.find:
+    paths: "{{ package_manager_apt_signing_key_directories }}"
+    patterns:
+      - "*.gpg"
+    recurse: true
+    file_type: file
+  register: package_manager_apt_trusted_gpg_files
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: |
+    Ensure Root File Ownership For APT Trusted GPG Keys.
+    Ensure APT Trusted GPG Keys are 0644 or More Restrictive.
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: file
+    owner: root
+    group: root
+    mode: >-
+      {{
+        item.mode
+        if (
+          item.mode is defined
+          and
+          item.mode is ansible.builtin.match("^0[0246][04][04]$")
+        )
+        else "0644"
+      }}
+  loop: "{{ package_manager_apt_trusted_gpg_files.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
