@@ -1,0 +1,13 @@
+Types: deb
+URIs: http://us.invalid.example.potato
+Suites: potato potato-updates potato-backports
+Components: main restricted universe multiverse omniverse
+Signed-By: /usr/share/keyrings/vendor-alpha.gpg
+
+Types: deb
+URIs: http://us.invalid.example.megapotato
+Suites: megapotato-security
+Components: main restricted universe multiverse
+Signed-By:
+    /etc/apt/trusted.gpg.d/vendor-beta.gpg
+    /etc/apt/trusted.gpg.d/vendor-charlie.gpg

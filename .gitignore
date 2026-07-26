@@ -9,6 +9,7 @@ __pycache__/
 *.py[cod]
 
 NOTES.md
+IMPLEMENTED.md
 
 # Keep non-humans (and occasionally humans) from accidentally committing their prod envs
 inventories/production/*
@@ -16,3 +17,8 @@ inventories/production/*
 !inventories/production/group_vars
 inventories/production/group_vars/*
 !inventories/production/group_vars/.keep
+
+# Don't commit generated invalid GPG keys
+molecule/debian/fixtures/gpg/*.asc
+molecule/debian/fixtures/gpg/*.gpg
+molecule/debian/fixtures/gpg/*.txt

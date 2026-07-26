@@ -1,0 +1,20 @@
+---
+- name: Import Pre-Flight Tasks
+  ansible.builtin.import_tasks:
+    file: debian/_preflight.yml
+
+- name: Import APT Conf Tasks
+  ansible.builtin.import_tasks:
+    file: debian/_apt_conf.yml
+
+- name: Import APT Sources List Tasks
+  ansible.builtin.import_tasks:
+    file: debian/_apt_sources_list.yml
+
+- name: Import APT Signing Key Tasks
+  ansible.builtin.import_tasks:
+    file: debian/_apt_signing_keys.yml
+
+- name: Import APT Auth Conf Tasks
+  ansible.builtin.import_tasks:
+    file: debian/_apt_auth_conf.yml

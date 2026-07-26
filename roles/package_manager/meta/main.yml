@@ -1,0 +1,13 @@
+---
+galaxy_info:
+  author: Kiln contributors
+  description: >-
+    Harden APT package management on Debian-family hosts by disabling weak
+    dependencies and securing configuration, repository, signing-key, and
+    authentication files.
+  license: MIT
+  min_ansible_version: "2.18"
+  platforms:
+    - name: Debian
+    - name: Ubuntu
+dependencies: []

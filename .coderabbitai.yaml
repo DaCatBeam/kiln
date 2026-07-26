@@ -110,8 +110,6 @@ code_generation:
           Avoid tests that merely duplicate the task YAML or assert that a task
           name exists unless called out in a review.
 
-          Write tests that 
-
           Reuse existing fixtures, variables, helpers, and naming conventions.
 
           After writing the tests, run the narrowest applicable command:
