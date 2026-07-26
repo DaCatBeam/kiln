@@ -1,4 +1,23 @@
 ---
+- name: Validate Legitimate APT Signing Key Directories Have Been Provided
+  ansible.builtin.assert:
+    that:
+      - package_manager_legitimate_apt_signing_key_directories is defined
+      - package_manager_legitimate_apt_signing_key_directories | list | length > 0
+    fail_msg: Legitimate APT signing key directories must be supplied for the run.
+
+- name: Validate Legitimate APT Signing Key Directories Are Absolute Paths and Non-Root
+  ansible.builtin.assert:
+    that:
+      - item | string | length > 0
+      - item is ansible.builtin.abs
+      - item | list | unique | length > 1
+      - item[-1] == "/"
+    fail_msg: All legitimate APT signing key directories must end in "/"
+  loop: "{{ package_manager_legitimate_apt_signing_key_directories }}"
+  loop_control:
+    label: "{{ item }}"
+
 - name: Discover APT Conf Directory
   ansible.builtin.stat:
     path: "{{ package_manager_apt_conf_directory_path }}"
@@ -126,63 +145,36 @@
     - cis_level_1_baseline
     - cis_level_2_baseline
 
-- name: Discover APT Trusted GPG Directory
+- name: Discover APT Signing Keys In Legitimate APT Signing Key Directories
   ansible.builtin.stat:
-    path: /etc/apt/trusted.gpg.d
-  register: package_manager_apt_trusted_gpg_directory
+    path: "{{ item }}"
+  loop: "{{ package_manager_legitimate_apt_signing_key_directories }}"
+  register: package_manager_signing_key_directories
   tags:
     - cis_level_1_baseline
     - cis_level_2_baseline
 
 - name: |
-    Ensure Root File Ownership For APT Trusted GPG Directory.
-    Ensure APT Trusted GPG Directory is 0755 or More Restrictive.
+    Ensure Root File Ownership For Legitimate APT Signing Key Directories.
+    Ensure Legitimate APT Signing Key Directories is 0755 or More Restrictive.
   ansible.builtin.file:
-    path: /etc/apt/trusted.gpg.d
+    path: "{{ item.stat.path }}"
     state: directory
     owner: root
     group: root
     mode: >-
       {{
-        package_manager_apt_trusted_gpg_directory.stat.mode
+        item.stat.mode
         if (
-          package_manager_apt_trusted_gpg_directory.stat.mode is defined
+          item.stat.mode is defined
           and
-          package_manager_apt_trusted_gpg_directory.stat.mode
-            is ansible.builtin.match("^0[0-7][0145][0145]$")
+          item.stat.mode is ansible.builtin.match("^0[0-7][0145][0145]$")
         )
         else "0755"
       }}
-  tags:
-    - cis_level_1_baseline
-    - cis_level_2_baseline
-
-- name: Discover Shared Keyrings Directory
-  ansible.builtin.stat:
-    path: /usr/share/keyrings
-  register: package_manager_shared_keyrings_directory
-  tags:
-    - cis_level_1_baseline
-    - cis_level_2_baseline
-
-- name: |
-    Ensure Root File Ownership For Shared Keyrings Directory.
-    Ensure Shared Keyrings Directory is 0755 or More Restrictive.
-  ansible.builtin.file:
-    path: /usr/share/keyrings
-    state: directory
-    owner: root
-    group: root
-    mode: >-
-      {{
-        package_manager_shared_keyrings_directory.stat.mode
-        if (
-          package_manager_shared_keyrings_directory.stat.mode is defined
-          and
-          package_manager_shared_keyrings_directory.stat.mode is ansible.builtin.match("^0[0-7][0145][0145]$")
-        )
-        else "0755"
-      }}
+  loop: "{{ package_manager_signing_key_directories.results }}"
+  loop_control:
+    label: "{{ item.stat.path }}"
   tags:
     - cis_level_1_baseline
     - cis_level_2_baseline

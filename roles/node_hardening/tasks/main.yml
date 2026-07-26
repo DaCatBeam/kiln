@@ -10,8 +10,8 @@
   ansible.builtin.import_role:
     name: package_manager
   when:
-  - node_hardening_enabled | bool
-  - node_hardening_package_manager_role_enabled | bool
+    - node_hardening_enabled | bool
+    - node_hardening_package_manager_role_enabled | bool
 
 - name: Apply foundational kernel hardening settings
   ansible.posix.sysctl:

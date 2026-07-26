@@ -3,3 +3,9 @@ package_manager_apt_conf_directory_path: /etc/apt/apt.conf.d
 package_manager_apt_conf_disable_weak_deps_file_name: 99-kiln-disable-weak-deps
 package_manager_apt_source_list_directory_path: /etc/apt/sources.list.d
 package_manager_apt_auth_conf_directory_path: /etc/apt/auth.conf.d
+
+# All legitimate APT Signing Key directories specified must end in a "/".
+package_manager_legitimate_apt_signing_key_directories:
+  - /usr/share/keyrings/
+  - /etc/apt/trusted.gpg.d/
+  - /etc/apt/keyrings/
