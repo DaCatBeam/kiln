@@ -257,6 +257,7 @@
     patterns:
       - "*.gpg"
     recurse: true
+    follow: true
     file_type: file
   register: package_manager_apt_trusted_gpg_files
   tags:
