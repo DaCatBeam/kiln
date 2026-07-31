@@ -24,45 +24,116 @@
     - cis_level_1_baseline
     - cis_level_2_baseline
 
-- name: Ensure Blacklist for CIS Level 1 Filesystem Kernel Modules
-  ansible.builtin.template:
-    src: blacklist.conf.j2
-    dest: "{{ kernel_modules_modprobe_directory_path }}/{{ kernel_modules_modprobe_conf_prefix }}-{{ item }}"
-    owner: root
-    group: root
-    mode: "0644"
+- name: Collect Present Kernel Modprobe Files
+  ansible.builtin.stat:
+    path: >-
+      {{ kernel_modules_modprobe_directory_path
+      }}/{{ kernel_modules_modprobe_conf_prefix
+      }}-{{ kernel_module }}.conf
   loop: >-
-    {{ kernel_modules_cis_level_1_filesystem_blacklist | difference(kernel_modules_filesystem_blacklist_exclusions) }}
+    {{
+      kernel_modules_cis_level_1_filesystem_blacklist
+      + kernel_modules_cis_level_2_filesystem_blacklist
+      + kernel_modules_cis_level_1_network_blacklist
+    }}
+  loop_control:
+    loop_var: kernel_module
+    label: "{{ kernel_module }}"
+  register: kernel_modules_modprobe_files_stats
+  tags:
+    - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: Ensure Kernel Modules Excluded From Blacklist Do Not Have A Blacklist File
+  ansible.builtin.file:
+    path: "{{ kernel_modules_modprobe_directory_path }}/{{ kernel_modules_modprobe_conf_prefix }}-{{ item }}.conf"
+    state: absent
+  loop: "{{ kernel_modules_filesystem_blacklist_exclusions + kernel_modules_network_blacklist_exclusions }}"
   loop_control:
     label: "{{ item }}"
   tags:
     - cis_level_1_baseline
     - cis_level_2_baseline
 
-- name: Ensure Blacklist for CIS Level 2 Filesystem Kernel Modules
+- name: Ensure Blacklist Files for CIS Level 1 Kernel Modules
   ansible.builtin.template:
     src: blacklist.conf.j2
-    dest: "{{ kernel_modules_modprobe_directory_path }}/{{ kernel_modules_modprobe_conf_prefix }}-{{ item }}"
+    dest: >-
+      {{ kernel_modules_modprobe_directory_path
+      }}/{{ kernel_modules_modprobe_conf_prefix
+      }}-{{ item.kernel_module }}.conf
     owner: root
     group: root
-    mode: "0644"
+    mode: >-
+      {{
+        item.stat.mode
+        if (
+          item.stat.mode is defined
+          and
+          item.stat.mode
+            is ansible.builtin.match("^0[0246][04][04]$")
+        )
+        else "0644"
+      }}
   loop: >-
-    {{ kernel_modules_cis_level_2_filesystem_blacklist | difference(kernel_modules_filesystem_blacklist_exclusions) }}
+    {{
+      kernel_modules_modprobe_files_stats.results
+      | rejectattr(
+          'kernel_module',
+          'in',
+          kernel_modules_filesystem_blacklist_exclusions
+          + kernel_modules_network_blacklist_exclusions
+          + kernel_modules_cis_level_2_filesystem_blacklist
+        )
+    }}
   loop_control:
-    label: "{{ item }}"
-  tags:
-    - cis_level_2_baseline
-
-- name: Ensure Blacklist for CIS Level 1 Network Kernel Modules
-  ansible.builtin.template:
-    src: blacklist.conf.j2
-    dest: "{{ kernel_modules_modprobe_directory_path }}/{{ kernel_modules_modprobe_conf_prefix }}-{{ item }}"
-    owner: root
-    group: root
-    mode: "0644"
-  loop: "{{ kernel_modules_cis_level_1_network_blacklist | difference(kernel_modules_network_blacklist_exclusions) }}"
-  loop_control:
-    label: "{{ item }}"
+    label: "{{ item.kernel_module }}"
+  when:
+    - item.kernel_module not in kernel_modules_filesystem_blacklist_exclusions
+    - item.kernel_module not in kernel_modules_network_blacklist_exclusions
+    - item.kernel_module not in kernel_modules_cis_level_2_filesystem_blacklist
   tags:
     - cis_level_1_baseline
+    - cis_level_2_baseline
+
+- name: Ensure Blacklist Files for CIS Level 2 Kernel Modules
+  ansible.builtin.template:
+    src: blacklist.conf.j2
+    dest: >-
+      {{ kernel_modules_modprobe_directory_path
+      }}/{{ kernel_modules_modprobe_conf_prefix
+      }}-{{ item.kernel_module }}.conf
+    owner: root
+    group: root
+    mode: >-
+      {{
+        item.stat.mode
+        if (
+          item.stat.mode is defined
+          and
+          item.stat.mode
+            is ansible.builtin.match("^0[0246][04][04]$")
+        )
+        else "0644"
+      }}
+  loop: >-
+    {{
+      kernel_modules_modprobe_files_stats.results
+      | rejectattr(
+          'kernel_module',
+          'in',
+          kernel_modules_filesystem_blacklist_exclusions
+          + kernel_modules_network_blacklist_exclusions
+          + kernel_modules_cis_level_1_filesystem_blacklist
+          + kernel_modules_cis_level_1_network_blacklist
+        )
+    }}
+  loop_control:
+    label: "{{ item.kernel_module }}"
+  when:
+    - item.kernel_module not in kernel_modules_filesystem_blacklist_exclusions
+    - item.kernel_module not in kernel_modules_network_blacklist_exclusions
+    - item.kernel_module not in kernel_modules_cis_level_1_filesystem_blacklist
+    - item.kernel_module not in kernel_modules_cis_level_1_network_blacklist
+  tags:
     - cis_level_2_baseline

@@ -109,3 +109,19 @@
         owner: root
         group: nogroup
         mode: "0645"
+
+    - name: Create Modprobe Blacklist File w/ Intentional Misconfiguration
+      ansible.builtin.copy:
+        src: fixtures/modprobe/misconfigured.conf
+        dest: /etc/modprobe.d/99-kiln-cramfs.conf
+        owner: root
+        group: nogroup
+        mode: "0644"
+
+    - name: Create Modprobe Blacklist File w/ Intentional Misconfiguration
+      ansible.builtin.copy:
+        src: fixtures/modprobe/misconfigured.conf
+        dest: /etc/modprobe.d/99-kiln-freevxfs.conf
+        owner: root
+        group: nogroup
+        mode: "0640"

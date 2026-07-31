@@ -224,22 +224,21 @@
     - name: Set Expected Kernel Module Blacklist
       ansible.builtin.set_fact:
         kiln_kernel_modules_expected_files:
-          - /etc/modprobe.d/99-kiln-cramfs
-          - /etc/modprobe.d/99-kiln-freevxfs
-          - /etc/modprobe.d/99-kiln-hfs
-          - /etc/modprobe.d/99-kiln-hfsplus
-          - /etc/modprobe.d/99-kiln-jffs2
-          - /etc/modprobe.d/99-kiln-overlay
-          - /etc/modprobe.d/99-kiln-squashfs
-          - /etc/modprobe.d/99-kiln-udf
-          - /etc/modprobe.d/99-kiln-firewire-core
-          - /etc/modprobe.d/99-kiln-usb-storage
-          - /etc/modprobe.d/99-kiln-atm
-          - /etc/modprobe.d/99-kiln-can
-          - /etc/modprobe.d/99-kiln-dccp
-          - /etc/modprobe.d/99-kiln-rds
-          - /etc/modprobe.d/99-kiln-sctp
-          - /etc/modprobe.d/99-kiln-tipc
+          - /etc/modprobe.d/99-kiln-cramfs.conf
+          - /etc/modprobe.d/99-kiln-hfs.conf
+          - /etc/modprobe.d/99-kiln-hfsplus.conf
+          - /etc/modprobe.d/99-kiln-jffs2.conf
+          - /etc/modprobe.d/99-kiln-overlay.conf
+          - /etc/modprobe.d/99-kiln-squashfs.conf
+          - /etc/modprobe.d/99-kiln-udf.conf
+          - /etc/modprobe.d/99-kiln-firewire-core.conf
+          - /etc/modprobe.d/99-kiln-usb-storage.conf
+          - /etc/modprobe.d/99-kiln-atm.conf
+          - /etc/modprobe.d/99-kiln-can.conf
+          - /etc/modprobe.d/99-kiln-dccp.conf
+          - /etc/modprobe.d/99-kiln-rds.conf
+          - /etc/modprobe.d/99-kiln-sctp.conf
+          - /etc/modprobe.d/99-kiln-tipc.conf
 
     - name: Collect Kernel Module Blacklist Files
       ansible.builtin.stat:
@@ -260,3 +259,28 @@
       loop: "{{ kiln_kernel_modules_expected_files_stats.results }}"
       loop_control:
         label: "{{ item.path }}"
+
+    - name: Collect Kernel Module File More Restrictive Mode
+      ansible.builtin.stat:
+        path: /etc/modprobe.d/99-kiln-freevxfs.conf
+      register: kiln_kernel_modules_more_restrictive_file
+
+    - name: Assert More Restrictive File Modes Are Retained
+      ansible.builtin.assert:
+        that:
+          - kiln_kernel_modules_more_restrictive_file.stat.exists
+          - kiln_kernel_modules_more_restrictive_file.stat.isreg
+          - kiln_kernel_modules_more_restrictive_file.stat.uid == 0
+          - kiln_kernel_modules_more_restrictive_file.stat.gid == 0
+          - kiln_kernel_modules_more_restrictive_file.stat.mode == "0640"
+
+    - name: Collect Content From Misconfigured Modprobe Conf
+      ansible.builtin.slurp:
+        src: /etc/modprobe.d/99-kiln-cramfs.conf
+      register: kiln_kernel_modules_misconfigured_modprobe_file
+
+    - name: Assert Misconfigured Modprobe Conf Is Corrected
+      ansible.builtin.assert:
+        that:
+          - "'install cramfs /bin/false' in (kiln_kernel_modules_misconfigured_modprobe_file.content | b64decode)"
+          - "'blacklist cramfs' in (kiln_kernel_modules_misconfigured_modprobe_file.content | b64decode)"
