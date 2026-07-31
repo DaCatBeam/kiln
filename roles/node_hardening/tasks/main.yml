@@ -2,7 +2,7 @@
 - name: Validate node hardening prerequisites
   ansible.builtin.assert:
     that:
-      - ansible_system == "Linux"
+      - ansible_facts["system"] == "Linux"
     fail_msg: "The node_hardening role supports Linux targets only."
   when: node_hardening_enabled | bool
 

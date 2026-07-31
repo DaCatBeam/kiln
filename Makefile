@@ -9,10 +9,10 @@ run-linter:
 	ansible-playbook --syntax-check playbooks/*.yml;
 
 run-debian-tests: create-test-fixtures
-	molecule test --scenario-name debian;
+	molecule test --scenario-name debian -- --diff;
 
 run-ubuntu-tests:
-	molecule test --scenario-name ubuntu;
+	molecule test --scenario-name ubuntu -- --diff;
 
 run-all-tests: run-linter run-debian-tests run-ubuntu-tests
 
