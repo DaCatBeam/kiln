@@ -8,7 +8,7 @@
     - name: Ensure this scenario runs on a Debian-family system
       ansible.builtin.assert:
         that:
-          - ansible_facts.os_family == "Debian"
+          - ansible_facts["os_family"] == "Debian"
         fail_msg: >-
           The apt_source_permissions scenario requires a Debian-family
           operating system.
