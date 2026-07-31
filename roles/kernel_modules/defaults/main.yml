@@ -1,0 +1,6 @@
+---
+kernel_modules_filesystem_blacklist_exclusions: []
+kernel_modules_network_blacklist_exclusions: []
+
+kernel_modules_modprobe_directory_path: /etc/modprobe.d
+kernel_modules_modprobe_conf_prefix: 99-kiln

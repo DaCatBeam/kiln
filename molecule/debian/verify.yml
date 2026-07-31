@@ -220,3 +220,43 @@
         that:
           - "'APT::Install-Recommends \"0\";' in (kiln_apt_disable_weak_deps_file_content.content | b64decode)"
           - "'APT::Install-Suggests \"0\";' in (kiln_apt_disable_weak_deps_file_content.content | b64decode)"
+
+    - name: Set Expected Kernel Module Blacklist
+      ansible.builtin.set_fact:
+        kiln_kernel_modules_expected_files:
+          - /etc/modprobe.d/99-kiln-cramfs
+          - /etc/modprobe.d/99-kiln-freevxfs
+          - /etc/modprobe.d/99-kiln-hfs
+          - /etc/modprobe.d/99-kiln-hfsplus
+          - /etc/modprobe.d/99-kiln-jffs2
+          - /etc/modprobe.d/99-kiln-overlay
+          - /etc/modprobe.d/99-kiln-squashfs
+          - /etc/modprobe.d/99-kiln-udf
+          - /etc/modprobe.d/99-kiln-firewire-core
+          - /etc/modprobe.d/99-kiln-usb-storage
+          - /etc/modprobe.d/99-kiln-atm
+          - /etc/modprobe.d/99-kiln-can
+          - /etc/modprobe.d/99-kiln-dccp
+          - /etc/modprobe.d/99-kiln-rds
+          - /etc/modprobe.d/99-kiln-sctp
+          - /etc/modprobe.d/99-kiln-tipc
+
+    - name: Collect Kernel Module Blacklist Files
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop: "{{ kiln_kernel_modules_expected_files }}"
+      loop_control:
+        label: "{{ item }}"
+      register: kiln_kernel_modules_expected_files_stats
+
+    - name: Assert Each Kernel Modules File Exists
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+          - item.stat.isreg
+          - item.stat.uid == 0
+          - item.stat.gid == 0
+          - item.stat.mode == "0644"
+      loop: "{{ kiln_kernel_modules_expected_files_stats.results }}"
+      loop_control:
+        label: "{{ item.path }}"

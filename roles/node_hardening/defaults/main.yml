@@ -1,6 +1,7 @@
 ---
 node_hardening_enabled: false
 node_hardening_package_manager_role_enabled: false
+node_hardening_kernel_modules_role_enabled: false
 node_hardening_sysctl:
   fs.protected_hardlinks: 1
   fs.protected_symlinks: 1
