@@ -12,3 +12,4 @@
       vars:
         node_hardening_enabled: true
         node_hardening_package_manager_role_enabled: true
+        node_hardening_kernel_modules_role_enabled: true

@@ -1,0 +1,4 @@
+# {{ ansible_managed }}
+
+install {{ item.kernel_module }} /bin/false
+blacklist {{ item.kernel_module }}
