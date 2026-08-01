@@ -34,8 +34,7 @@ jobs:
       - name: Install Virtualbox and Vagrant
         run: |
           sudo apt update;
-          wget -O- https://apt.releases.hashicorp.com/gpg \
-            | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg;
+          wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg;
           echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
           sudo apt install vagrant virtualbox -y;
           virtualbox --version;
@@ -52,5 +51,6 @@ jobs:
 
       - name: Run Molecule Tests
         run: |
+          export VAGRANT_DEFAULT_PROVIDER=virtualbox;
           make run-debian-tests;
           make run-ubuntu-tests;
