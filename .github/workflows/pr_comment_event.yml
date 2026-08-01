@@ -1,9 +1,9 @@
 ---
 name: PR Comment Event
+
 on: # yamllint disable-line rule:truthy
   issue_comment:
-    types:
-      - created
+    types: [created]
 
 concurrency:
   group: rerun-ci-${{ github.event.issue.number }}
@@ -17,15 +17,15 @@ jobs:
   rerun-ci:
     name: Rerun CI
     if: >-
-      github.event.issue.pull_request &&
-      contains(github.event.comment.body, 'Github do CI') &&
-      (
-        github.event.comment.author_association == 'OWNER'
+      contains(
+        fromJSON('["DaCatBeam"]'),
+        github.event.comment.user.login
       )
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
     steps:
-      - name: Find CI run for pull request
+      - name: Find completed CI run for PR head
         id: ci-run
         env:
           GH_TOKEN: ${{ github.token }}
@@ -41,23 +41,38 @@ jobs:
               --jq '.head.sha'
           )"
 
-          run_id="$(
+          run_json="$(
             gh api \
               --method GET \
               "repos/${GITHUB_REPOSITORY}/actions/workflows/${CI_WORKFLOW}/runs" \
               -f head_sha="${head_sha}" \
               -f event="pull_request" \
               -f status="completed" \
-              -f per_page="1" \
-              --jq '.workflow_runs[0].id // empty'
+              -F per_page=1 \
+              --jq '.workflow_runs[0] // empty'
           )"
 
-          if [[ -z "${run_id}" ]]; then
-            echo "::error::No completed CI run found for commit ${head_sha}"
+          if [[ -z "${run_json}" ]]; then
+            echo "::error::No completed ${CI_WORKFLOW} run found for ${head_sha}"
             exit 1
           fi
 
-          echo "run_id=${run_id}" >> "${GITHUB_OUTPUT}"
+          run_id="$(jq -r '.id' <<< "${run_json}")"
+          run_attempt="$(jq -r '.run_attempt' <<< "${run_json}")"
+          run_url="$(jq -r '.html_url' <<< "${run_json}")"
+          conclusion="$(jq -r '.conclusion' <<< "${run_json}")"
+
+          echo "Selected CI run:"
+          echo "  ID:         ${run_id}"
+          echo "  Attempt:    ${run_attempt}"
+          echo "  Conclusion: ${conclusion}"
+          echo "  URL:        ${run_url}"
+
+          {
+            echo "run_id=${run_id}"
+            echo "run_attempt=${run_attempt}"
+            echo "run_url=${run_url}"
+          } >> "${GITHUB_OUTPUT}"
 
       - name: Rerun CI
         env:
@@ -66,8 +81,38 @@ jobs:
         run: |
           set -euo pipefail
 
-          gh api \
-            --method POST \
-            "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/rerun"
+          gh run rerun "${RUN_ID}" \
+            --repo "${GITHUB_REPOSITORY}"
 
           echo "Requested rerun of workflow run ${RUN_ID}"
+
+      - name: Verify rerun was created
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ steps.ci-run.outputs.run_id }}
+          PREVIOUS_ATTEMPT: ${{ steps.ci-run.outputs.run_attempt }}
+        run: |
+          set -euo pipefail
+
+          for attempt in {1..10}; do
+            run_json="$(
+              gh api \
+                --method GET \
+                "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}"
+            )"
+
+            current_attempt="$(jq -r '.run_attempt' <<< "${run_json}")"
+            current_status="$(jq -r '.status' <<< "${run_json}")"
+
+            echo "Run attempt=${current_attempt}, status=${current_status}"
+
+            if (( current_attempt > PREVIOUS_ATTEMPT )); then
+              echo "CI rerun successfully created."
+              exit 0
+            fi
+
+            sleep 3
+          done
+
+          echo "::error::The CI run attempt did not increase"
+          exit 1
