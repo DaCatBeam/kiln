@@ -26,4 +26,4 @@
           - "'managed_by=kiln' in (kiln_lifecycle_probe.content | b64decode)"
           - "'scenario=ubuntu' in (kiln_lifecycle_probe.content | b64decode)"
           - "'platform=kiln-ubuntu' in (kiln_lifecycle_probe.content | b64decode)"
-          - "'os_family=Ubuntu' in (kiln_lifecycle_probe.content | b64decode)"
+          - "'os_family=Debian' in (kiln_lifecycle_probe.content | b64decode)"
