@@ -5,7 +5,7 @@ on: # yamllint disable-line rule:truthy
     types: [opened, reopened, synchronize]
 
 concurrency:
-  group: ci_test_suite
+  group: ci-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
@@ -40,8 +40,13 @@ jobs:
           wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg;
           echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
           sudo apt update;
-          sudo apt install vagrant virtualbox -y;
-          virtualbox --version;
+          sudo apt-get install --yes --no-install-recommends \
+            "linux-headers-$(uname -r)" \
+            virtualbox \
+            vagrant;
+          sudo modprobe vboxdrv;
+          VBoxManage --version;
+          command -v VBoxHeadless;
           vagrant --version;
       # yamllint enable rule:line-length
 

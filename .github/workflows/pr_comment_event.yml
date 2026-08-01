@@ -6,7 +6,7 @@ on: # yamllint disable-line rule:truthy
       - created
 
 concurrency:
-  group: ci_test_suite
+  group: rerun-ci-${{ github.event.issue.number }}
   cancel-in-progress: true
 
 permissions:
