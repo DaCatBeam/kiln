@@ -20,7 +20,7 @@ jobs:
       github.event.issue.pull_request &&
       contains(github.event.comment.body, 'Github do CI') &&
       (
-        github.event.comment.user.login == 'DaCatBeam'
+        github.event.comment.author_association == 'OWNER'
       )
     runs-on: ubuntu-latest
 
