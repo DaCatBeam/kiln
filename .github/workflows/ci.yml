@@ -39,12 +39,26 @@ jobs:
         run: |
           wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg;
           echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+
           sudo apt update;
           sudo apt-get install --yes --no-install-recommends \
             "linux-headers-$(uname -r)" \
             virtualbox \
             vagrant;
+
+          # Workaround Load KVM Module
+          echo "Loaded KVM modules before cleanup:"
+          lsmod | grep '^kvm' || true
+
+          if lsmod | grep -q '^kvm_amd'; then
+            sudo modprobe --remove kvm_amd
+          fi
+
+          echo "Loaded KVM modules after cleanup:"
+          lsmod | grep '^kvm' || true
+
           sudo modprobe vboxdrv;
+
           VBoxManage --version;
           command -v VBoxHeadless;
           vagrant --version;
