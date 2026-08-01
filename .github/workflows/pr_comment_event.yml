@@ -5,6 +5,10 @@ on: # yamllint disable-line rule:truthy
     types:
       - created
 
+concurrency:
+  group: ci_test_suite
+  cancel-in-progress: true
+
 permissions:
   actions: write
   pull-requests: read

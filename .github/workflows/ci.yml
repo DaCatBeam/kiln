@@ -4,6 +4,10 @@ on: # yamllint disable-line rule:truthy
   pull_request:
     types: [opened, reopened, synchronize]
 
+concurrency:
+  group: ci_test_suite
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -14,20 +18,38 @@ jobs:
     steps:
       - name: Checkout codebase
         uses: actions/checkout@v7
+
       - name: Install Python
         uses: actions/setup-python@v7
         with:
           python-version: 3.12.11
-      - name: Install Deps
+
+      - name: Install Python Deps
         run: pip install -r requirements-dev.txt;
+
       - name: MAKE Sure `Make` Is Installed
         run: sudo apt install -y make;
+
+      # yamllint disable rule:line-length
+      - name: Install Virtualbox and Vagrant
+        run: |
+          sudo apt update;
+          wget -O- https://apt.releases.hashicorp.com/gpg \
+            | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg;
+          echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+          sudo apt install vagrant virtualbox -y;
+          virtualbox --version;
+          vagrant --version;
+      # yamllint enable rule:line-length
+
       - name: Install Dependencies For Test Scripts
         run: |
           # Install GPG for fixture generation.
           sudo apt install -y gnupg;
+
       - name: Run Linter
         run: make run-linter;
+
       - name: Run Molecule Tests
         run: |
           make run-debian-tests;
