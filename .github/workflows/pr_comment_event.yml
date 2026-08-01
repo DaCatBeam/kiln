@@ -1,7 +1,6 @@
 ---
-name: PR 
-
-on:
+name: PR Comment Event
+on: # yamllint disable-line rule:truthy
   issue_comment:
     types:
       - created
